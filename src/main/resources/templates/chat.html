@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #title-bar {
+            background-color: #A8A8A8;
+            color: black;
+            padding: 10px;
+            text-align: center;
+            font-size: 24px;
+            max-width: 100%; /* 设置最大宽度为100% */
+            margin: 0;
+        }
+
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            margin: 0 auto;
+            overflow-y: auto;
+            height: calc(100% - 50px); /* 减去标题栏的高度 */
+        }
+
+        .message-container {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .user-message {
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            padding: 10px;
+            margin-left: auto;
+        }
+
+        .system-message {
+            background-color: #007bff;
+            color: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        #input-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 10px; /* 添加底部间距 */
+        }
+
+        #user-input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 80%;
+            margin-right: 10px;
+        }
+
+        #user-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        #send-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #send-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div id="title-bar">AI询问</div>
+<div id="chat-container">
+    <div id="chat-messages">
+        <!-- 消息将动态添加到这里 -->
+    </div>
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="请输入...">
+        <button id="send-button" onclick="sendMessage()">发送</button>
+    </div>
+</div>
+
+
+
+<script type="module">
+
+    import {fetchEventSource} from '/index.js';
+
+    // 获取输入框和发送按钮的引用
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+
+    // 添加事件监听器
+    userInput.addEventListener('keyup', handleKeyUp);
+    sendButton.addEventListener('click', sendMessage);
+
+    function handleKeyUp(event) {
+        if (event.key === "Enter") { // 按下的键为回车键
+            event.preventDefault(); // 阻止默认的回车换行行为
+            sendMessage();
+        }
+    }
+
+    function sendMessage() {
+        const userInput = document.getElementById('user-input').value;
+        appendMessage('user', userInput);
+        document.getElementById('user-input').value = '';
+        fetchServerSentEvents(userInput);
+    }
+    window.sendMessage = sendMessage;
+
+    function appendMessage(sender, message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('message-container');
+        if (sender === 'user') {
+            messageContainer.style.justifyContent = 'flex-end';
+        }
+        const messageElement = document.createElement('div');
+        messageElement.classList.add(`${sender}-message`);
+        messageElement.textContent = message;
+        messageContainer.appendChild(messageElement);
+        chatMessages.appendChild(messageContainer);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    window.appendMessage = appendMessage;
+
+
+    function fetchServerSentEvents(message) {
+        const abortController = new AbortController();
+        let messageElement;
+
+        fetchEventSource('http://127.0.0.1:8091/completions?messages=' + message, {
+            method: "GET",
+            signal: abortController.signal,
+            onmessage(event) {
+                const data = JSON.parse(event.data);
+                console.log(data);
+                if (!messageElement) {
+                    messageElement = createMessageElement('system', '');
+                    appendMessageElement(messageElement);
+                }
+                messageElement.textContent += data.choices[0].delta.content;
+            },
+            onclose() {
+                console.log("Connection closed by the server.");
+                abortController.abort();
+            },
+            onerror(event) {
+                console.error("EventSource failed:", event);
+            }
+        });
+    }
+
+    window.fetchServerSentEvents = fetchServerSentEvents;
+
+    function createMessageElement(sender, message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add(`${sender}-message`);
+        messageElement.textContent = message;
+        return messageElement;
+    }
+
+    function appendMessageElement(messageElement) {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('message-container');
+        messageContainer.appendChild(messageElement);
+        chatMessages.appendChild(messageContainer);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+</script>
+</body>
+</html>
