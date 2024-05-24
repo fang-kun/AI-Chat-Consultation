@@ -1,6 +1,6 @@
-# AI聊天问诊
+# AI聊天咨询
 
-AI聊天问诊 (chatthymeleaf-test-master) 采用Springboot + Thymeleaf 的架构实现。
+AI聊天咨询 (chatthymeleaf-test-master) 采用Springboot + Thymeleaf 的架构实现。
 
 <br>
 
@@ -30,3 +30,11 @@ AI聊天问诊 (chatthymeleaf-test-master) 采用Springboot + Thymeleaf 的架�
 <br>
 
 3. 项目正常启动后，浏览器运行 http://localhost:8091/index/
+
+## API配置方法
+
+**前提说明**：目前（2024.5.24）项目中的API秘钥仍可用，但使用的是国内的API接口，但本项目接口完全兼容OpenAI API，只需将本项目中原始API域名或API URL替换为OpenAI的，API密钥也替换成OpenAI的秘钥。
+
+<br>
+
+在 `service/GptServiceImpl.java` 文件下，可替换 API URL 和 API 秘钥，分别位于代码33行和63行。使用者可根据自己的API秘钥进行替换。
