@@ -32,6 +32,7 @@ public class GptServiceImpl {
         this.webClient = WebClient.builder()//创建webflux的client
                 .baseUrl("https://api.aicnn.cn/v1")//填写对应的api地址
                 .defaultHeader("Content-Type", "application/json")//设置默认请求类型
+                .defaultHeader(HttpHeaders.USER_AGENT, "Apifox/1.0.0 (https://apifox.com)")
                 .build();
     }
 
